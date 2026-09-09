@@ -6,7 +6,7 @@ import { fetchAll } from "./fetch.js";
 import { filterLast24h } from "./filter.js";
 import { dedupeByUrl } from "./dedupe.js";
 import { summarizeAll } from "./summarize.js";
-import { renderMarkdown } from "./render.js";
+import { renderMarkdown, renderHtml } from "./render.js";
 
 const REPORTS_DIR = path.join(process.cwd(), "reports");
 
@@ -27,13 +27,18 @@ export async function run() {
 
   const now = new Date();
   const markdown = renderMarkdown(summarized, now);
+  const html = renderHtml(summarized, now);
 
   await mkdir(REPORTS_DIR, { recursive: true });
-  const filePath = path.join(REPORTS_DIR, `${now.toISOString().slice(0, 10)}.md`);
-  await writeFile(filePath, markdown, "utf-8");
-  console.log(`[run] 日报已生成: ${filePath}`);
+  const dateStr = now.toISOString().slice(0, 10);
+  const mdPath = path.join(REPORTS_DIR, `${dateStr}.md`);
+  const htmlPath = path.join(REPORTS_DIR, `${dateStr}.html`);
+  await writeFile(mdPath, markdown, "utf-8");
+  await writeFile(htmlPath, html, "utf-8");
+  console.log(`[run] 日报已生成: ${mdPath}`);
+  console.log(`[run] 网页已生成: ${htmlPath}`);
 
-  return filePath;
+  return { mdPath, htmlPath };
 }
 
 function main() {
