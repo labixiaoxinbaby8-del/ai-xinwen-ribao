@@ -95,8 +95,15 @@
 
 ## 6. 输出形式
 
-- 首选:`reports/YYYY-MM-DD.md`,每天一份文件
-- 后续可选:转成静态 HTML 页面发布(参考已有的 [my-blog](https://github.com/labixiaoxinbaby8-del/my-blog) 发布方式)
+- 本地存档:`reports/YYYY-MM-DD.md` + `reports/YYYY-MM-DD.html`,每天一份(git 不track,纯本地调试用)
+- 发布产物:`docs/index.html`(始终是最新一期)+ `docs/reports/YYYY-MM-DD.html`(历史存档),这两个由 GitHub Pages 直接从仓库 `main` 分支的 `docs/` 目录托管
+
+## 6.1 自动发布方案
+
+- GitHub Actions 工作流([.github/workflows/daily-report.yml](.github/workflows/daily-report.yml)):每天 00:00 UTC(北京时间 8:00)触发,也支持手动触发(`workflow_dispatch`)
+- 流程:checkout → `npm ci` → `node src/index.js`(单次运行,注入 `ANTHROPIC_API_KEY` 这个 repo secret)→ 把新生成的 `docs/` 变化提交并推送回 `main`
+- GitHub Pages 配置为从 `main` 分支的 `/docs` 目录发布,所以推送后几分钟内网页自动更新,不需要额外部署步骤
+- `ANTHROPIC_API_KEY` 存成 GitHub repo secret,不写进代码或工作流文件里
 
 ## 7. 技术选型
 
@@ -108,6 +115,5 @@
 ## 8. 开放问题
 
 - 日报是否需要中英对照,还是直接中文摘要?
-- 是否需要保留原文链接供跳转?
 - 去重目前只按 `link` 判断,不同来源报道同一事件(不同链接)会重复出现,是否需要处理?(可留到后续版本)
-- `data/articles-*.json` 中间产物要不要保留归档,还是每次跑完可以丢弃?
+- `docs/reports/` 历史存档会一直增长,要不要设置保留期限(比如只留最近 30 天)?

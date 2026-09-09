@@ -9,6 +9,8 @@ import { summarizeAll } from "./summarize.js";
 import { renderMarkdown, renderHtml } from "./render.js";
 
 const REPORTS_DIR = path.join(process.cwd(), "reports");
+const DOCS_DIR = path.join(process.cwd(), "docs");
+const DOCS_REPORTS_DIR = path.join(DOCS_DIR, "reports");
 
 export async function run() {
   console.log("[run] 开始抓取...");
@@ -38,7 +40,17 @@ export async function run() {
   console.log(`[run] 日报已生成: ${mdPath}`);
   console.log(`[run] 网页已生成: ${htmlPath}`);
 
-  return { mdPath, htmlPath };
+  // 同时发布一份到 docs/,供 GitHub Pages 使用:
+  // docs/index.html 始终是最新一期,docs/reports/DATE.html 保留历史存档
+  await mkdir(DOCS_REPORTS_DIR, { recursive: true });
+  const docsArchivePath = path.join(DOCS_REPORTS_DIR, `${dateStr}.html`);
+  const docsIndexPath = path.join(DOCS_DIR, "index.html");
+  await writeFile(docsArchivePath, html, "utf-8");
+  await writeFile(docsIndexPath, html, "utf-8");
+  console.log(`[run] Pages 存档已生成: ${docsArchivePath}`);
+  console.log(`[run] Pages 首页已更新: ${docsIndexPath}`);
+
+  return { mdPath, htmlPath, docsArchivePath, docsIndexPath };
 }
 
 function main() {
